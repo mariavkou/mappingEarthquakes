@@ -8,6 +8,21 @@ $(document).ready(function(){
     var clon = 0;
     var mapZoom = 2;
 
+    //(lon, lat) EPSG:4326 WGS 84 --> (x, y) EPSG:3857 WGS 84/Pseudo-Mercator
+    function mercX(lon) {
+        lon = lon * (180 / Math.PI);
+        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
+        var b = lon + Math.PI;
+        return a * b;
+    }
+    function mercY(lat) {
+        lat = lat * (180 / Math.PI);
+        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
+        var b = Math.tan(Math.PI / 4 + lat / 2);
+        var c = Math.PI - Math.log(b);
+        return a * c;
+    }
+
     function loadJSON(file, callback) {   
         var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
@@ -28,13 +43,22 @@ $(document).ready(function(){
 	function gotData(data) {
 		data = JSON.parse(data);
 		console.log(data);
+        console.log(data['features']);
+        var features = data['features'];
+        for (feature in features) {
+            console.log(features[feature]);
+            //console.log(features[feature]['geometry']);
+        }
+        testPoint = features[0]['geometry']['coordinates'];
+        console.log(testPoint);
 	}
 	
 	loadData();
+    console.log(mercX(121.4737));
 
 	var marker = new ol.Feature({
 		type: 'geoMarker',
-		geometry: new ol.geom.Point([0, 0]),
+		geometry: new ol.geom.Point([13522390.43, 3662707.26]),// Shanghai (lon, lat): 121.4737, 31.2304 https://epsg.io/transform
 		name: 'Null Island',
 		population: 4000,
 		rainfall: 500
@@ -57,22 +81,6 @@ $(document).ready(function(){
 	var vectorLayer = new ol.layer.Vector({
 		source: vectorSource
 	});
-
-    function mercX(lon) {
-        lon = lon * (180 / Math.PI);
-        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
-        var b = lon + Math.PI;
-        return a * b;
-    }
-
-    function mercY(lat) {
-        lat = lat * (180 / Math.PI);
-        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
-        var b = Math.tan(Math.PI / 4 + lat / 2);
-        var c = Math.PI - Math.log(b);
-        return a * c;
-    }
-
     var map = new ol.Map({
         target: 'map',
         layers: [

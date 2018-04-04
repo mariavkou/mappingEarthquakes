@@ -9,19 +9,17 @@ $(document).ready(function(){
     var mapZoom = 2;
 
     //(lon, lat) EPSG:4326 WGS 84 --> (x, y) EPSG:3857 WGS 84/Pseudo-Mercator
-    function mercX(lon) {
-        lon = lon * (180 / Math.PI);
-        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
-        var b = lon + Math.PI;
-        return a * b;
-    }
-    function mercY(lat) {
-        lat = lat * (180 / Math.PI);
-        var a = (128 / Math.PI) * Math.pow(2, mapZoom);
-        var b = Math.tan(Math.PI / 4 + lat / 2);
-        var c = Math.PI - Math.log(b);
-        return a * c;
-    }
+    function merc(lon, lat) {
+ 		if (Math.abs(lon) <= 180 && Math.abs(lat) < 90) {    
+      		num = lon * 0.017453292519943295
+         	x = 6378137.0 * num 
+        	a = lat * 0.017453292519943295
+       		y = 3189068.5 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)))
+			return [x, y];
+		} else {
+			console.log('Error in the tranformation of the coordinates');
+		}
+	}
 
     function loadJSON(file, callback) {   
         var xobj = new XMLHttpRequest();
@@ -54,7 +52,7 @@ $(document).ready(function(){
 	}
 	
 	loadData();
-    console.log(mercX(121.4737));
+    console.log(merc(121.4737, 31.2304));
 
 	var marker = new ol.Feature({
 		type: 'geoMarker',
@@ -89,7 +87,7 @@ $(document).ready(function(){
             }), vectorLayer
         ],
         view: new ol.View({
-            center: ol.proj.fromLonLat([clat, clon]),
+            center: ol.proj.fromLonLat([clon, clat]),
             zoom: mapZoom
         })
     });
